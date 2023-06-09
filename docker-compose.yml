@@ -1,0 +1,12 @@
+version: '2'
+volumes:
+    shared-data:
+services:
+    controller:
+      restart: always
+      privileged: true
+      build: ./controller
+      volumes:
+        - 'shared-data:/data/my_data'
+      ports:
+        - '8080:8080'
