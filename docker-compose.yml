@@ -9,4 +9,4 @@ services:
       volumes:
         - 'shared-data:/data/my_data'
       ports:
-        - '8080:8080'
+        - '8080:5000'
