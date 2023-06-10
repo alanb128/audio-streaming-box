@@ -9,6 +9,8 @@ import adafruit_character_lcd.character_lcd_i2c as character_lcd
 from adafruit_seesaw import seesaw, rotaryio
 import RPi.GPIO as GPIO
 
+VERSION = 0.5
+
 # Adafruit I2C QT Rotary Encoder
 # Using the INT output on Pi GPIO 17
 seesaw = seesaw.Seesaw(board.I2C(), addr=0x36)
@@ -35,6 +37,18 @@ i2c = board.I2C()  # uses board.SCL and board.SDA
 # Initialise the lcd class
 lcd = character_lcd.Character_LCD_I2C(i2c, lcd_columns, lcd_rows)
 
+# Custom chars
+CHAR_PLAY = bytes([0x10,0x18,0x1c,0x1e,0x1c,0x18,0x10,0x0])
+CHAR_PAUSE = bytes([0x0,0x1b,0x1b,0x1b,0x1b,0x1b,0x0,0x0])
+CHAR_STOP = bytes([0x0,0x1f,0x1f,0x1f,0x1f,0x1f,0x0,0x0])
+CHAR_BAR = bytes([0x0,0x1f,0x1f,0x1f,0x1f,0x1f,0x1f,0x1f])
+lcd.create_char(0, CHAR_PLAY)
+lcd.create_char(1, CHAR_PAUSE)
+lcd.create_char(2, CHAR_STOP)
+lcd.create_char(3, CHAR_BAR)
+
+# to display play char: \x00
+
 KEYPAD = [
         ["A","B","C","D"],
         ["E","F","G","H"],
@@ -52,14 +66,32 @@ factory = rpi_gpio.KeypadFactory()
 # and factory.create_4_by_4_keypad for reasonable defaults
 keypad = factory.create_keypad(keypad=KEYPAD, row_pins=ROW_PINS, col_pins=COL_PINS)
 
-print("start")
+current_song = {"artist": "", "album": "", "title": "", "encoded": "", "bitrate": "", "volume": 0, "mute": 0, "state": ""}
+display_mode = 0
 
-def lcd_message(msg):
-        lcd.clear()
-        lcd.message = msg
+def lcd_display(trigger):
+    #
+    # Decides what should be shown on the LCD display
+    #
+    
+    lcd.clear()
+    if trigger == "post":
+        # moode status has changed
+        if current_song["state"] == "stop":
+            lcd.message = "     moOde\n    stopped"
+        elif current_song["state"] == "pause":
+            lcd.message = current_song["title"] + "\n\x01    paused"
+        elif current_song["state"] == "play":
+            lcd.message = current_song["title"] + "\n\x00 " + current_song["encoded"]
+            
+    elif trigger == "init":
+        lcd.message = "     moOde\n     audio"
 
 def key_handler(key):
-
+    #
+    # Catches any key presses and performs appropriate action
+    #
+    
     print("key pressed: {}".format(key))
 
 def rotary_incoming(r):
@@ -95,15 +127,6 @@ def rotary_incoming(r):
 
 app = Flask(__name__)
 
-m_artist = ""
-m_album = ""
-m_title = ""
-m_encoded = ""
-m_bitrate = ""
-m_volume = 0
-m_mute = 0
-m_state = ""
-
 @app.route('/')
 def get_api():
     return jsonify("this is the API")
@@ -111,30 +134,33 @@ def get_api():
 
 @app.route('/', methods=['POST'])
 def post_api():
-    print("post")
-    #post_data = request.get_json()
-    m_artist = request.form["artist"]
-    m_album = request.form["album"]
-    m_title = request.form["title"]
-    m_encoded = request.form["encoded"]
-    m_bitrate = request.form["bitrate"]
-    m_volume = request.form["volume"]
-    m_mute = request.form["mute"]
-    m_state = request.form["state"]
-    print("title:{}".format(m_title))
-    lcd_message(m_title + '\n' + m_encoded)
-    #lcd_message("playing")
+
+    global current_song
+    
+    current_song["artist"] = request.form["artist"]
+    current_song["album"] = request.form["album"]
+    current_song["title"] = request.form["title"]
+    current_song["encoded"] = request.form["encoded"]
+    current_song["bitrate"] = request.form["bitrate"]
+    current_song["volume"] = request.form["volume"]
+    current_song["mute"] = request.form["mute"]
+    current_song["state"] = request.form["state"]
+    
+    lcd_display("post")
+    
     return '', 204
 
 
 #  main thread of execution
 if __name__=='__main__':
 
+    lcd_display("init")
+    
     #rotaryio interrupts
     GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.add_event_detect(17, GPIO.FALLING, callback=rotary_incoming)
 
-    # printKey will be called each time a keypad button is pressed
+    # key_handler will be called each time a keypad button is pressed
     keypad.registerKeyPressHandler(key_handler)
 
     # Turn backlight on
@@ -142,3 +168,4 @@ if __name__=='__main__':
 
     # start API server
     app.run(host="0.0.0.0",port=5000,debug=True)
+
