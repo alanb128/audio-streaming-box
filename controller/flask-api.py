@@ -9,7 +9,10 @@ import adafruit_character_lcd.character_lcd_i2c as character_lcd
 from adafruit_seesaw import seesaw, rotaryio
 import RPi.GPIO as GPIO
 
+import requests
+
 VERSION = 0.5
+DISPLAY_RESUME = 2.66  # seconds
 
 # Adafruit I2C QT Rotary Encoder
 # Using the INT output on Pi GPIO 17
@@ -68,6 +71,10 @@ keypad = factory.create_keypad(keypad=KEYPAD, row_pins=ROW_PINS, col_pins=COL_PI
 
 current_song = {"artist": "", "album": "", "title": "", "encoded": "", "bitrate": "", "volume": 0, "mute": 0, "state": ""}
 display_mode = 0
+playlists = []
+preset_keys = ["T", "N", "J", "E", "A", "U", "P", "K", "F", "B"]
+current_playlist = ""  # current or most recently played playlist
+sel_playlist = ""   # selected playlist before being played
 
 def lcd_display(trigger):
     #
@@ -75,8 +82,7 @@ def lcd_display(trigger):
     #
     
     lcd.clear()
-    if trigger == "post":
-        # moode status has changed
+    if trigger == "post" or trigger == "resume":
         if current_song["state"] == "stop":
             lcd.message = "     moOde\n    stopped"
         elif current_song["state"] == "pause":
@@ -90,9 +96,32 @@ def lcd_display(trigger):
 def key_handler(key):
     #
     # Catches any key presses and performs appropriate action
+    # T N J E A U P K F B H
     #
-    
-    print("key pressed: {}".format(key))
+    global sel_playlist, current_playlist
+    if key in preset_keys:
+        if preset_keys.index(key) + 1 > len(playlists):
+            lcd.clear()
+            lcd.message = "No playlist\ndefined..."
+            time.sleep(DISPLAY_RESUME)
+            lcd_display("resume")
+        else:
+            sel_playlist = playlists[preset_keys.index(key)]
+            lcd.clear()
+            lcd.message = "Play playlist?\n" + playlists[preset_keys.index(key)]
+    elif key == "H":
+        if sel_playlist == "":
+            lcd.clear()
+            lcd.message = "No playlist\nselected..."
+            time.sleep(DISPLAY_RESUME)
+            lcd_display("resume")  
+        else:
+            lcd.clear()
+            lcd.message = "Please wait..."
+            playlist(sel_playlist)
+            current_playlist == sel_playlist
+            sel_playlist = "" 
+            lcd_display("resume")   
 
 def rotary_incoming(r):
     #
@@ -125,6 +154,35 @@ def rotary_incoming(r):
     rotary_pos = current_pos
     #print("seesaw rotary data updated! {0}, {1}".format(rot_pos, rot_btn))
 
+def get_playlists():
+    #
+    # get playlists and add to dict for preset buttons
+    #
+    
+    p = []
+    
+    url="http://host.docker.internal/command/playlist.php?cmd=get_playlists"
+    cookies = {'PHPSESSID': 'ho7vk67sqrjua8sme0pqhsjgdq'}
+    headers = {"Content-type": "application/json","Accept": "application/json"}
+    r = requests.get(url, headers=headers, cookies=cookies)
+    playlists = r.json()
+    for playlist in playlists:
+        for attribute, value in playlist.items():
+            if attribute == "name":
+                p.append(value)
+                
+    return p
+    
+def playlist(playlist):
+    #
+    # Plays a playlist
+    #
+    r = requests.get('http://host.docker.internal/command/?cmd=clear')
+    r = requests.get('http://host.docker.internal/command/?cmd=load%20'+playlist)
+    r = requests.get('http://host.docker.internal/command/?cmd=play')
+
+
+
 app = Flask(__name__)
 
 @app.route('/')
@@ -156,6 +214,8 @@ if __name__=='__main__':
 
     lcd_display("init")
     
+    playlists = get_playlists()
+    
     #rotaryio interrupts
     GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.add_event_detect(17, GPIO.FALLING, callback=rotary_incoming)
@@ -168,4 +228,5 @@ if __name__=='__main__':
 
     # start API server
     app.run(host="0.0.0.0",port=5000,debug=True)
+
 
