@@ -11,6 +11,7 @@ import RPi.GPIO as GPIO
 
 import requests
 import os
+import socket
 
 VERSION = 0.5
 DISPLAY_RESUME = 2.66  # seconds
@@ -74,7 +75,7 @@ factory = rpi_gpio.KeypadFactory()
 # and factory.create_4_by_4_keypad for reasonable defaults
 keypad = factory.create_keypad(keypad=KEYPAD, row_pins=ROW_PINS, col_pins=COL_PINS)
 
-current_song = {"artist": "", "album": "", "title": "", "encoded": "", "bitrate": "", "volume": 0, "mute": 0, "state": ""}
+current_song = {"artist": "", "album": "", "title": "", "encoded": "", "bitrate": "", "volume": 0, "mute": 0, "state": "", "hostname": "hostname", "ip": "ip", "moode": "moode"}
 display_mode = 0
 playlists = []
 preset_keys = ["T", "N", "J", "E", "A", "U", "P", "K", "F", "B"]
@@ -83,24 +84,47 @@ sel_playlist = ""   # selected playlist before being played
 last_key = ""  # help with double key press issue
 last_key_count = 0  # also help with double key
 current_volume = 0
+line_1_mode = "title"
+line_2_mode = "normal"
 
 def lcd_display(trigger):
     #
     # Decides what should be shown on the LCD display
     #
     
+    my_display = "     moOde\n     audio"  # default if no trigger
+    print("trig: {0}, l1m: {1}, l2m: {2}".format(trigger, line_1_mode, line_2_mode))
     lcd.clear()
+    if trigger == "resume":
+        get_current_state()
+        
     if trigger == "post" or trigger == "resume":
         if current_song["state"] == "stop":
-            lcd.message = "     moOde\n    stopped"
-        elif current_song["state"] == "pause":
-            lcd.message = current_song["title"] + "\n\x01    paused"
-        elif current_song["state"] == "play":
-            lcd.message = current_song["title"] + "\n\x00 " + current_song["encoded"]
+            my_display = "     moOde\n    stopped"
+        else:   # pause or play
+            if line_1_mode == "title":
+                my_display = current_song["title"]
+            elif line_1_mode == "artist":
+                my_display = current_song["artist"]
+            elif line_1_mode == "album":
+                my_display = current_song["album"]
+            
+            if current_song["state"] == "pause":
+                my_display = my_display + "\n\x01    paused"
+            elif current_song["state"] == "play":
+                my_display = my_display +  "\n\x00 " + current_song["encoded"]
             
     elif trigger == "init":
-        lcd.message = "     moOde\n     audio"
+        my_display = "     moOde\n     audio"
+        
+    elif (trigger == "info"):
+        if line_2_mode == "info1":
+            my_display = current_song["hostname"] + "\n" + current_song["ip"]
+        elif line_2_mode == "info2":
+            my_display = "moOde version:\n" + current_song["moode"]
 
+    lcd.message = my_display
+    
 def sanitizer(mystring):
     #
     # removes anything but letters and numbers from input string
@@ -130,29 +154,20 @@ def get_current_state():
     current_song["volume"] = sanitizer(current["volume"])
     current_song["mute"] = sanitizer(current["mute"])
     current_song["state"] = sanitizer(current["state"])
+    # below not exposed by moode api
+    #current_song["hostname"] = current["h_name"]
+    #current_song["moode"] = current["moode_ver"]
+    #current_song["ip"] = current["ip"]
 
     current_volume = int(current_song["volume"])
-
-def key_handler_x(key):
-    #
-    # Since every key gets tow presses for some reason,
-    # this module fixes that
-    #
-    #global last_key, last_key_count
-
-    #if key != last_key:
-    #    key_supervisor(key)
-    #    print("-- accepting keypress {0}, {1}".format(key, last_key))
-
-    #last_key = key
-    print("key: {}".format(key))
 
 def key_handler(key):
     #
     # Catches any key presses and performs appropriate action
     # T N J E A U P K F B H
     #
-    global sel_playlist, current_playlist
+    global sel_playlist, current_playlist, line_1_mode, line_2_mode
+    print("key: {}".format(key))
     if key in preset_keys:   # select a playlist
         if preset_keys.index(key) + 1 > len(playlists):
             lcd.clear()
@@ -182,8 +197,28 @@ def key_handler(key):
             current_playlist == sel_playlist
             sel_playlist = "" 
             lcd_display("resume")   
-    elif key =="V":
-        pass
+    elif key =="M":   # line 1 display
+        if line_1_mode == "title":
+            line_1_mode = "artist"
+        elif line_1_mode == "artist":
+            line_1_mode = "album"
+        elif line_1_mode == "album":
+            line_1_mode = "title"
+        lcd_display("resume")
+        
+    elif key == "W":    #  line 2 display
+        if line_2_mode == "normal":
+            #print("x1")
+            line_2_mode = "info1"
+            lcd_display("info")
+        elif line_2_mode == "info1":
+            #print("x2")
+            line_2_mode = "info2"
+            lcd_display("info")
+        elif line_2_mode == "info2":
+            #print("x3")
+            line_2_mode = "normal"
+            lcd_display("resume")
 
 def adj_vol(direction):
     #
@@ -286,9 +321,12 @@ def post_api():
     current_song["volume"] = sanitizer(request.form["volume"])
     current_song["mute"] = sanitizer(request.form["mute"])
     current_song["state"] = sanitizer(request.form["state"])
+    current_song["hostname"] = request.form["h_name"]
+    current_song["moode"] = request.form["moode_ver"]
+    current_song["ip"] = request.form["ip"]
 
     current_volume = int(current_song["volume"])
-    print("set vol: {0} - {1}".format(current_song["volume"], current_volume))
+    print("h, m, i: {0} - {1} - {2}".format(current_song["hostname"], current_song["moode"], current_song["ip"]))
     lcd_display("post")
     
     return '', 204
@@ -316,6 +354,7 @@ lcd_display("post")
 
 # start API server
 app.run(host="0.0.0.0",port=5000,debug=True,use_reloader=False)
+
 
 
 
