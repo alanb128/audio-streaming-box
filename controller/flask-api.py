@@ -16,6 +16,8 @@ import socket
 VERSION = 0.5
 DISPLAY_RESUME = 2.66  # seconds
 
+no_rotary = True
+
 # Adafruit I2C QT Rotary Encoder
 # Using the INT output on Pi GPIO 17
 try:
@@ -31,6 +33,7 @@ else:
     seesaw.pin_mode(24, seesaw.INPUT_PULLUP)  # Pin on the QT
     seesaw.set_GPIO_interrupts(1 << 24, True)
     seesaw.enable_encoder_interrupt()
+    no_rotary = False
 
 rotary_pos = 0  # keeps track of wheel position
 
@@ -93,7 +96,7 @@ def lcd_display(trigger):
     #
     
     my_display = "     moOde\n     audio"  # default if no trigger
-    print("trig: {0}, l1m: {1}, l2m: {2}".format(trigger, line_1_mode, line_2_mode))
+    #print("trig: {0}, l1m: {1}, l2m: {2}".format(trigger, line_1_mode, line_2_mode))
     lcd.clear()
     if trigger == "resume":
         get_current_state()
@@ -168,28 +171,34 @@ def key_handler(key):
     #
     global sel_playlist, current_playlist, line_1_mode, line_2_mode
     print("key: {}".format(key))
-    if key in preset_keys:   # select a playlist
+    if key in preset_keys:   # select/deselect a playlist
         if preset_keys.index(key) + 1 > len(playlists):
             lcd.clear()
             lcd.message = "No playlist\ndefined..."
             time.sleep(DISPLAY_RESUME)
             lcd_display("resume")
         else:
-            sel_playlist = playlists[preset_keys.index(key)]
-            lcd.clear()
-            lcd.message = "Play playlist?\n" + playlists[preset_keys.index(key)]
+            if sel_playlist == playlists[preset_keys.index(key)]:
+                # same playlist button clicked so deselect it
+                lcd.clear()
+                lcd.message = "Playlist\nunselected"
+                sel_playlist = ""
+            else:
+                sel_playlist = playlists[preset_keys.index(key)]
+                lcd.clear()
+                lcd.message = "Play playlist?\n" + playlists[preset_keys.index(key)]
     elif key == "D":    # play/pause or play selected playlist
         if sel_playlist == "":
             get_current_state()
             if current_song["state"] == "play":
                 # pause
                 r = requests.get('http://host.docker.internal/command/?cmd=pause')
-                print("from PLAY state to PAUSE")
+                #print("from PLAY state to PAUSE")
             elif current_song["state"] == "stop" or current_song["state"] == "pause":
                 # play
                 r = requests.get('http://host.docker.internal/command/?cmd=play')
-                print("From {} to PLAY".format(current_song["state"]))
-            lcd_display("resume")
+                #print("From {} to PLAY".format(current_song["state"]))
+            #lcd_display("resume")
         else:
             lcd.clear()
             lcd.message = "Please wait..."
@@ -219,6 +228,18 @@ def key_handler(key):
             #print("x3")
             line_2_mode = "normal"
             lcd_display("resume")
+            
+    elif key == "H":
+        if no_rotary:
+            pass
+        else:
+            r = requests.get('http://host.docker.internal/command/?cmd=prev')
+            
+    elif key == "V":
+        if no_rotary:
+            pass
+        else:
+            r = requests.get('http://host.docker.internal/command/?cmd=next')
 
 def adj_vol(direction):
     #
@@ -228,7 +249,7 @@ def adj_vol(direction):
 
     vol_level = ""
     v = round(current_volume/15) + 1
-    print("volume: {0} - {1}".format(v, current_volume))
+    #print("volume: {0} - {1}".format(v, current_volume))
     #for i in range(v):
     #     vol_level = vol_level + "\x03"
     vol_level = "\x03" * v
@@ -253,18 +274,21 @@ def rotary_incoming(r):
     rot_btn = seesaw.digital_read(24)
     if rotary_pos == current_pos:
         if rot_btn == True:
-            print("Button pressed!")
+            pass
+            #print("Button pressed!")
             #lcd.message = "Key pressed:\nRotary button"
             #button_rotary_click()
     else:
         if current_pos < rotary_pos:
-            print("Turned right {}".format(current_pos))
+            pass
+            #print("Turned right {}".format(current_pos))
             #lcd.message = "Rotary right: {}".format(current_pos)
             # Action on every other (even) click
             if (current_pos % 2) == 0:
                 adj_vol("right")
         else:
-            print("Turned left {}".format(current_pos))
+            pass
+            #print("Turned left {}".format(current_pos))
             #lcd.message = "Rotary left: {}".format(current_pos)
             # Action on every other (even) click
             if (current_pos % 2) == 0:
@@ -326,7 +350,7 @@ def post_api():
     current_song["ip"] = request.form["ip"]
 
     current_volume = int(current_song["volume"])
-    print("h, m, i: {0} - {1} - {2}".format(current_song["hostname"], current_song["moode"], current_song["ip"]))
+    #print("h, m, i: {0} - {1} - {2}".format(current_song["hostname"], current_song["moode"], current_song["ip"]))
     lcd_display("post")
     
     return '', 204
@@ -354,6 +378,7 @@ lcd_display("post")
 
 # start API server
 app.run(host="0.0.0.0",port=5000,debug=True,use_reloader=False)
+
 
 
 
