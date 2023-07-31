@@ -1,9 +1,31 @@
 # moode-box
 Create a streaming music box with Moode audio, controls and an LCD
 
+## Setup
+
+In the moode UI, under "Local Services" in the "System" menu, turn on "Metadata file" and "LCD updater".
+
+
 ## Current Song
 
-output of `cat  /var/local/www/currentsong.txt`:
+FYI: output of `cat  /var/local/www/currentsong.txt`:
+
+```
+file=NAS/Flacs/The Temptations/Vintage Gold/04 - Since I Lost My Baby.flac
+artist=The Temptations
+album=Vintage Gold
+title=Since I Lost My Baby
+coverurl=/coverart.php/NAS%2FFlacs%2FThe%20Temptations%2FVintage%20Gold%2F04%20-%20Since%20I%20Lost%20My%20Baby.flac
+track=4
+date=
+composer=
+encoded=File does not exist
+bitrate=0 bps
+outrate=0 bps
+volume=100
+mute=0
+state=stop
+```
 
 ```
 /var/local/www/commandw/lcd_updater.py
