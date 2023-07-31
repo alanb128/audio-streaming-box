@@ -51,6 +51,8 @@ state=play
 
 This was the initial setup, using four pushbuttons and an [1.27" OLED screen](https://www.adafruit.com/product/1673).
 
+Using the [Split Body Case DIY 4.72 x 3.82 x 1.57 inch enclosure](https://www.amazon.com/gp/product/B010DHQPVW) and replacing the front and back panel with the 3d printed STL files in the "alternate" folder.
+
 To set this up, use raspi-config to turn on SPI for the screen. Then:
 
 ```
