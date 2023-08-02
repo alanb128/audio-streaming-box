@@ -4,7 +4,18 @@ import time
 
 import board
 import busio
-import adafruit_character_lcd.character_lcd_i2c as character_lcd
+
+import digitalio
+import adafruit_character_lcd.character_lcd_spi as character_lcd
+spi = busio.SPI(board.SCK, MOSI=board.MOSI)
+latch = digitalio.DigitalInOut(board.D17)
+cols = 16
+rows = 2
+lcd = character_lcd.Character_LCD_SPI(spi, latch, cols, rows)
+
+
+
+#import adafruit_character_lcd.character_lcd_i2c as character_lcd
 
 from adafruit_seesaw import seesaw, rotaryio
 import RPi.GPIO as GPIO
@@ -38,16 +49,16 @@ else:
 rotary_pos = 0  # keeps track of wheel position
 
 # Modify this if you have a different sized Character LCD
-lcd_columns = 16
-lcd_rows = 2
+#lcd_columns = 16
+#lcd_rows = 2
 
 # Initialise I2C bus.
-i2c = board.I2C()  # uses board.SCL and board.SDA
+#i2c = board.I2C()  # uses board.SCL and board.SDA - used this
 #i2c = board.STEMMA_I2C()  # For using the built-in STEMMA QT connector on a microcontroller
 #i2c = busio.I2C(board.SCL, board.SDA)
 
 # Initialise the lcd class
-lcd = character_lcd.Character_LCD_I2C(i2c, lcd_columns, lcd_rows)
+#lcd = character_lcd.Character_LCD_I2C(i2c, lcd_columns, lcd_rows)
 
 # Custom chars
 CHAR_PLAY = bytes([0x10,0x18,0x1c,0x1e,0x1c,0x18,0x10,0x0])
@@ -119,6 +130,12 @@ def lcd_display(trigger):
             
     elif trigger == "init":
         my_display = "     moOde\n     audio"
+
+    elif trigger == "shutdown":
+        my_display = "     moOde\n   power off"
+
+    elif trigger == "reboot":
+        my_display = "     moOde\n    restarting"
         
     elif (trigger == "info"):
         if line_2_mode == "info1":
@@ -241,6 +258,12 @@ def key_handler(key):
         else:
             r = requests.get('http://host.docker.internal/command/?cmd=next')
 
+    elif key == "C":
+        r = requests.get('http://host.docker.internal/command/?cmd=prev')
+
+    elif key == "G":
+        r = requests.get('http://host.docker.internal/command/?cmd=next')
+
 def adj_vol(direction):
     #
     #  changes volume level - expects "left" or "right"
@@ -327,11 +350,6 @@ def playlist(playlist):
 
 app = Flask(__name__)
 
-@app.route('/')
-def get_api():
-    return jsonify("this is the API")
-
-
 @app.route('/', methods=['POST'])
 def post_api():
 
@@ -355,6 +373,22 @@ def post_api():
     
     return '', 204
 
+@app.route('/shutdown', methods=['POST'])
+def shutdown_api():
+
+    lcd_display("shutdown")
+    
+    return '', 204
+
+@app.route('/reboot', methods=['POST'])
+def reboot_api():
+
+    lcd_display("reboot")
+    return '', 204
+
+@app.route('/')
+def get_api():
+    return jsonify("this is the API")
 
 #  main thread of execution
 
@@ -368,8 +402,12 @@ get_current_state()
 playlists = get_playlists()
 
 #rotaryio interrupts
-GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.add_event_detect(17, GPIO.FALLING, callback=rotary_incoming)
+#GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+#GPIO.add_event_detect(17, GPIO.FALLING, callback=rotary_incoming)
+
+# GPIO setup
+GPIO.setup(17, GPIO.OUT)  # Used by LCD backpack
+# Rest of GPIO set up by keyhandler
 
 # key_handler will be called each time a keypad button is pressed
 keypad.registerKeyPressHandler(key_handler)
@@ -378,6 +416,7 @@ lcd_display("post")
 
 # start API server
 app.run(host="0.0.0.0",port=5000,debug=True,use_reloader=False)
+
 
 
 
