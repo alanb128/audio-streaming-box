@@ -13,6 +13,9 @@ Update `/var/local/www/commandw/lcd_updater.py` and `restart.sh` with the includ
 
 Issue `docker compose up -d` to start the container. It should always load on its own going forward.
 
+Made a change to files? `docker compose down` then `docker compose build` then `docker compose up`
+
+
 ## Reference files
 
 FYI: output of `cat  /var/local/www/currentsong.txt`:
