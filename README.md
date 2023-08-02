@@ -5,9 +5,15 @@ Create a streaming music box with Moode audio, controls and an LCD
 
 In the moode UI, under "Local Services" in the "System" menu, turn on "Metadata file" and "LCD updater".
 
-Install Docker on the pi: https://raspberrytips.com/docker-on-raspberry-pi/
+Install Docker on the pi: https://raspberrytips.com/docker-on-raspberry-pi/ - make sure it starts automatically
 
-## Current Song
+Clone this repo to /usr/src/app on device. (You can delete the "alternate" folder.)
+
+Update `/var/local/www/commandw/lcd_updater.py` and `restart.sh` with the included modified files.
+
+Issue `docker compose up -d` to start the container. It should always load on its own going forward.
+
+## Reference files
 
 FYI: output of `cat  /var/local/www/currentsong.txt`:
 
