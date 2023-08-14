@@ -378,6 +378,9 @@ def shutdown_api():
 
     lcd_display("shutdown")
     
+    lcd.backlight = False
+    GPIO.output(27, 0)  # grn off
+    GPIO.output(22, 1)  # red on
     return '', 204
 
 @app.route('/reboot', methods=['POST'])
@@ -407,7 +410,14 @@ playlists = get_playlists()
 
 # GPIO setup
 GPIO.setup(17, GPIO.OUT)  # Used by LCD backpack
+
+GPIO.setup(27, GPIO.OUT)  # Used by red pwr LED
+GPIO.setup(22, GPIO.OUT)  # Used by grn pwr LED
+
 # Rest of GPIO set up by keyhandler
+
+GPIO.output(27, 1)  # grn on
+GPIO.output(22, 0)  # red off
 
 # key_handler will be called each time a keypad button is pressed
 keypad.registerKeyPressHandler(key_handler)
@@ -416,6 +426,7 @@ lcd_display("post")
 
 # start API server
 app.run(host="0.0.0.0",port=5000,debug=True,use_reloader=False)
+
 
 
 
