@@ -1,8 +1,29 @@
-# moode-box
-Create a streaming music box with Moode audio, controls and an LCD
+# network-streamer
+Create an audiophile streaming music device with [Moode audio](https://moodeaudio.org/), controls and an LCD
+
+## About
+This project started as a means for adding a network audio streaming device to my stereo system. These devices are typically [awesome but expensive](https://www.crutchfield.com/shopsearch/network_streamer.html?&pg=2) so I decided to build one using a Raspberry Pi, an old analog AM/FM tuner's case, and the open-source Moode software. Front panel buttons can be used to select playlists, start/stop music and move to the previous and next track. When integrated into an old stereo component, it fits nicely into a stereo system. I used an old Sony ST-JX411/412/421 series of tuners from the 1990's that are a nice size and have rotary tuning knob.
+
+This is an advanced project that requires soldering, tinkering, and some prior experience working with the Raspberry Pi (Python and Docker experince is helpful but not required). This document outlines the basics to get started and create a minumum build. However, if you get stuck or find an issue, feel free to add an issue to this repo!
+
+## Hardware required
+
+- A Raspberry Pi 4-based SBC (2, 4, or 8 GB of RAM) or a CM-4
+- Pi accessories such as a MicroSD card and power supply
+- An audio DAC HAT for the Pi such as [this](https://www.raspberrypi.com/products/dac-pro/) or [this](https://www.raspberrypi.com/products/dac-plus/) (I used a [digital output HAT](https://www.hifiberry.com/shop/boards/hifiberry-digi2-pro/) with an outboard DAC)
+- An LCD alphanumeric display like [this one](https://www.adafruit.com/product/181)
+- [i2c / SPI character LCD backpack](https://www.adafruit.com/product/292) for connecting the LCD display to the Pi
+- To control the device with switches, you'll need one or more momentary SPST switches, wired into a matrix (see below)
 
 ## Setup
 
+### Hardware
+
+- Connect the LCD display to the backpack, and the backpack to the Pi using SPI. ([instructions](https://learn.adafruit.com/i2c-spi-lcd-backpack/python-circuitpython)
+- If you have the room, the backpack can be soldered right onto the LCD.
+- Connect the DAC HAT to the Pi.
+
+- Download a Moode Audio image for the Pi 4, flash it to a MicroSD card and insert it into the Pi.
 In the moode UI, under "Local Services" in the "System" menu, turn on "Metadata file" and "LCD updater".
 
 Install Docker on the pi: https://raspberrytips.com/docker-on-raspberry-pi/ - make sure it starts automatically
