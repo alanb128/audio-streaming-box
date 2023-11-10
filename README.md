@@ -1,9 +1,7 @@
 # network-streamer
 Create an audiophile streaming music device with [Moode audio](https://moodeaudio.org/), controls and an LCD
 
-[<img src="images/player-front.png">]
-
-![player](https://raw.githubusercontent.com/alanb128/moode-box/main/images/player-front.png)
+<img src="images/player-front.png">
 
 ## About
 This project started as a means for adding a network audio streaming device to my stereo system. These devices are typically [awesome but expensive](https://www.crutchfield.com/shopsearch/network_streamer.html?&pg=2) so I decided to build one using a Raspberry Pi, an old analog AM/FM tuner's case, and the open-source Moode software. Front panel buttons can be used to select playlists, start/stop music and move to the previous and next track. When integrated into an old stereo component, it fits nicely into a stereo system. I used an old Sony ST-JX411/412/421 series of tuners from the 1990's that are a nice size and have rotary tuning knob.
@@ -48,7 +46,7 @@ This is an advanced project that requires soldering, tinkering, and some prior e
 
 If you make a change to any of the files on the device after this process, issue `docker compose down` then `docker compose build` then `docker compose up`.
 
-![player - back](https://raw.githubusercontent.com/alanb128/moode-box/main/images/player-back.png)
+<img src="images/player-back.png">
 
 ## Reference files
 
