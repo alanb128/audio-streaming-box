@@ -1,6 +1,8 @@
 # network-streamer
 Create an audiophile streaming music device with [Moode audio](https://moodeaudio.org/), controls and an LCD
 
+[<img src="images/player-front.png">]
+
 ![player](https://raw.githubusercontent.com/alanb128/moode-box/main/images/player-front.png)
 
 ## About
