@@ -22,11 +22,17 @@ This is an advanced project that requires soldering, tinkering, and some prior e
 - Connect the LCD display to the backpack, and the backpack to the Pi using SPI. ([instructions](https://learn.adafruit.com/i2c-spi-lcd-backpack/python-circuitpython)
 - If you have the room, the backpack can be soldered right onto the LCD.
 - Connect the DAC HAT to the Pi.
+- Wire up your switches in a [key matrix pattern](https://pcbheaven.com/wikipages/How_Key_Matrices_Works/) (see the use of diodes in the link to improve performance)
+- Wire the rows and columns of the key matrix to the Pi's GPIO pins (which may be on the DAC HAT if using one of those)
+
+### Software
 
 - Download a Moode Audio image for the Pi 4, flash it to a MicroSD card and insert it into the Pi.
-In the moode UI, under "Local Services" in the "System" menu, turn on "Metadata file" and "LCD updater".
-
-Install Docker on the pi: https://raspberrytips.com/docker-on-raspberry-pi/ - make sure it starts automatically
+- Power up the Pi and make sure Moode works and you get audio out (LCD and buttons will not initially be functional)
+- In the moode UI, under "Local Services" in the "System" menu, turn on "Metadata file" and "LCD updater".
+- Adjust [the code](https://github.com/alanb128/moode-box/blob/main/controller/flask-api.py#L83) in flask-api to correspond to the GPIO pins you used for your key matrix rows and columns
+- SSH into your Moode Pi (usually `ssh pi@moode.local` with password `moodeaudio`)
+- Install Docker on the pi: https://raspberrytips.com/docker-on-raspberry-pi/ - make sure it starts automatically
 
 Clone this repo to /usr/src/app on device. (You can delete the "alternate" folder.)
 
