@@ -4,7 +4,9 @@ Create an audiophile streaming music device with [Moode audio](https://moodeaudi
 ## About
 This project started as a means for adding a network audio streaming device to my stereo system. These devices are typically [awesome but expensive](https://www.crutchfield.com/shopsearch/network_streamer.html?&pg=2) so I decided to build one using a Raspberry Pi, an old analog AM/FM tuner's case, and the open-source Moode software. Front panel buttons can be used to select playlists, start/stop music and move to the previous and next track. When integrated into an old stereo component, it fits nicely into a stereo system. I used an old Sony ST-JX411/412/421 series of tuners from the 1990's that are a nice size and have rotary tuning knob.
 
-This is an advanced project that requires soldering, tinkering, and some prior experience working with the Raspberry Pi (Python and Docker experince is helpful but not required). This document outlines the basics to get started and create a minumum build. However, if you get stuck or find an issue, feel free to add an issue to this repo!
+I hope to add more details and instructions in the future, but the below should get ambitious makers started!
+
+This is an advanced project that requires soldering, tinkering, and some prior experience working with the Raspberry Pi (Python and Docker experience is helpful but not required). This document outlines the basics to get started and create a minumum build. However, if you get stuck or find an issue, feel free to add an issue to this repo!
 
 ## Hardware required
 
@@ -24,6 +26,7 @@ This is an advanced project that requires soldering, tinkering, and some prior e
 - Connect the DAC HAT to the Pi.
 - Wire up your switches in a [key matrix pattern](https://pcbheaven.com/wikipages/How_Key_Matrices_Works/) (see the use of diodes in the link to improve performance)
 - Wire the rows and columns of the key matrix to the Pi's GPIO pins (which may be on the DAC HAT if using one of those)
+- See the [pad4pi](https://pypi.org/project/pad4pi/) library for more infor about the key matrix.
 - If you want a "power on" button, add a momentary pushbutton that sends GPIO 3 to ground.
   
 ### Software
@@ -40,7 +43,6 @@ This is an advanced project that requires soldering, tinkering, and some prior e
 - Issue `docker compose up -d` to start the container. It should always load on its own going forward.
 
 If you make a change to any of the files on the device after this process, issue `docker compose down` then `docker compose build` then `docker compose up`.
-
 
 ## Reference files
 
