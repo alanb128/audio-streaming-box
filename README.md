@@ -19,33 +19,34 @@ This is an advanced project that requires soldering, tinkering, and some prior e
 
 ### Hardware
 
-- Connect the LCD display to the backpack, and the backpack to the Pi using SPI. ([instructions](https://learn.adafruit.com/i2c-spi-lcd-backpack/python-circuitpython)
+- Connect the LCD display to the backpack, and the backpack to the Pi using SPI. ([instructions](https://learn.adafruit.com/i2c-spi-lcd-backpack/python-circuitpython))
 - If you have the room, the backpack can be soldered right onto the LCD.
 - Connect the DAC HAT to the Pi.
 - Wire up your switches in a [key matrix pattern](https://pcbheaven.com/wikipages/How_Key_Matrices_Works/) (see the use of diodes in the link to improve performance)
 - Wire the rows and columns of the key matrix to the Pi's GPIO pins (which may be on the DAC HAT if using one of those)
-
+- If you want a "power on" button, add a momentary pushbutton that sends GPIO 3 to ground.
+  
 ### Software
 
 - Download a Moode Audio image for the Pi 4, flash it to a MicroSD card and insert it into the Pi.
 - Power up the Pi and make sure Moode works and you get audio out (LCD and buttons will not initially be functional)
+- If using LCD, use `raspi-config` to turn on SPI for the screen.
 - In the moode UI, under "Local Services" in the "System" menu, turn on "Metadata file" and "LCD updater".
-- Adjust [the code](https://github.com/alanb128/moode-box/blob/main/controller/flask-api.py#L83) in flask-api to correspond to the GPIO pins you used for your key matrix rows and columns
 - SSH into your Moode Pi (usually `ssh pi@moode.local` with password `moodeaudio`)
 - Install Docker on the pi: https://raspberrytips.com/docker-on-raspberry-pi/ - make sure it starts automatically
+- Clone this repo to `/usr/src/app` on device. (You can delete the "alternate" folder.)
+- Adjust [the code](https://github.com/alanb128/moode-box/blob/main/controller/flask-api.py#L83) in flask-api on the device to correspond to the GPIO pins you used for your key matrix rows and columns 
+- Update `/var/local/www/commandw/lcd_updater.py` and `restart.sh` with the included modified files.
+- Issue `docker compose up -d` to start the container. It should always load on its own going forward.
 
-Clone this repo to /usr/src/app on device. (You can delete the "alternate" folder.)
-
-Update `/var/local/www/commandw/lcd_updater.py` and `restart.sh` with the included modified files.
-
-Issue `docker compose up -d` to start the container. It should always load on its own going forward.
-
-Made a change to files? `docker compose down` then `docker compose build` then `docker compose up`
+If you make a change to any of the files on the device after this process, issue `docker compose down` then `docker compose build` then `docker compose up`.
 
 
 ## Reference files
 
-FYI: output of `cat  /var/local/www/currentsong.txt`:
+These may be helpful for further programming in the future:
+
+FYI: output of `cat  /var/local/www/currentsong.txt` for both playing a file then playing a stream:
 
 ```
 file=NAS/Flacs/The Temptations/Vintage Gold/04 - Since I Lost My Baby.flac
@@ -83,21 +84,3 @@ volume=60
 mute=0
 state=play
 ```
-
-## Alternate
-
-This was the initial setup, using four pushbuttons and an [1.27" OLED screen](https://www.adafruit.com/product/1673).
-
-Using the [Split Body Case DIY 4.72 x 3.82 x 1.57 inch enclosure](https://www.amazon.com/gp/product/B010DHQPVW) and replacing the front and back panel with the 3d printed STL files in the "alternate" folder.
-
-A "power on" momentary pushbutton sends GPIO 3 to ground. The display uses a [3.3v L4931 voltage regulator](https://www.adafruit.com/product/2166) and a 10uf 50v capacitor to provide additional 3v power to the LCD since the HiFiberry Digi2-Pro has 3V current restrictions.
-
-To set this up, use raspi-config to turn on SPI for the screen. Then:
-
-```
-sudo pip3 install adafruit-circuitpython-rgb-display
-sudo apt-get install fonts-dejavu
-sudo apt-get install python3-pil #(Version: 8.1.2 already installed)
-```
-
-Update `/var/local/www/commandw/lcd_updater.py` with the code in this repo's alternate folder.
