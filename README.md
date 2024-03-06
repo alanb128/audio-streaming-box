@@ -6,6 +6,8 @@ Create an audiophile streaming music device with [moOde audio](https://moodeaudi
 ## About
 This project started as a means for adding a network audio streaming device to my stereo system. These devices are typically [awesome but expensive](https://www.crutchfield.com/shopsearch/network_streamer.html?&pg=2) so I decided to build one using a Raspberry Pi, an old analog AM/FM tuner's case, and the open-source moOde software. Front panel buttons can be used to select playlists, start/stop music and move to the previous and next track. When integrated into an old stereo component, it fits nicely into a stereo system. I used an old Sony ST-JX411/412/421 series of tuners from the 1990s that are a nice size and have rotary tuning knob.
 
+See the project's video [here](https://youtu.be/9q6N7AinWJA?si=kqSZgW_-xdN4nL4z)!
+
 I hope to add more details and instructions in the future, but the below should get ambitious makers started!
 
 This is an advanced project that requires soldering, tinkering, and some prior experience working with the Raspberry Pi (Python and Docker experience is helpful but not required). This document outlines the basics to get started and create a minumum build. However, if you get stuck or find an issue, feel free to add an issue to this repo!
