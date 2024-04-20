@@ -7,5 +7,4 @@ RUN \
 
 COPY *.py ./
 
-#CMD ["python3", "flask-api.py"]
-CMD ["sleep", "infinity"]
+CMD ["python3", "flask-api.py"]
